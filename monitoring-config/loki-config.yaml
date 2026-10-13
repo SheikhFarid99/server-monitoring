@@ -1,0 +1,74 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+
+common:
+  path_prefix: /loki
+
+  replication_factor: 1
+
+  ring:
+    kvstore:
+      store: inmemory
+
+  storage:
+    s3:
+      endpoint: http://minio:9000
+      bucketnames: loki
+      access_key_id: ${LOKI_S3_ACCESS_KEY}
+      secret_access_key: ${LOKI_S3_SECRET_KEY}
+      insecure: true
+      s3forcepathstyle: true
+
+schema_config:
+  configs:
+    - from: 2026-01-01
+      store: tsdb
+      object_store: s3
+      schema: v13
+
+      index:
+        prefix: loki_index_
+        period: 24h
+
+storage_config:
+  aws:
+    endpoint: http://minio:9000
+    bucketnames: loki
+    access_key_id: ${LOKI_S3_ACCESS_KEY}
+    secret_access_key: ${LOKI_S3_SECRET_KEY}
+    insecure: true
+    s3forcepathstyle: true
+
+  tsdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/index_cache
+
+ingester:
+  wal:
+    enabled: true
+    dir: /loki/wal
+
+querier:
+  max_concurrent: 4
+
+limits_config:
+  retention_period: 168h
+  allow_structured_metadata: true
+  volume_enabled: true
+
+compactor:
+  working_directory: /loki/compactor
+
+  retention_enabled: true
+
+  delete_request_store: s3
+
+  compaction_interval: 10m
+
+  retention_delete_delay: 2h
+
+analytics:
+  reporting_enabled: false
